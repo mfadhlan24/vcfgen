@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VCF Generator Pro</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <style>
+    /* Custom animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .animate-fade-in {
+      animation: fadeIn 0.5s ease forwards;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .animate-spin {
+      animation: spin 1s linear infinite;
+    }
+    
+    /* Scrollbar styling */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #3B82F6;
+      border-radius: 3px;
+    }
+    
+    /* Dark mode scrollbar */
+    .dark .custom-scrollbar::-webkit-scrollbar-track {
+      background: #374151;
+    }
+    
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #60A5FA;
+    }
+    
+    /* Custom transitions */
+    .custom-transition {
+      transition: all 0.3s ease;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen transition-colors duration-300">
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="fixed inset-0 bg-white bg-opacity-80 dark:bg-gray-900 dark:bg-opacity-80 z-50 flex items-center justify-center transition-opacity duration-300 opacity-0 pointer-events-none">
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-xl flex flex-col items-center">
+      <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      <p class="mt-4 text-blue-600 dark:text-blue-400 font-medium">Memproses data...</p>
+    </div>
+  </div>
+
+  <!-- Theme Toggle -->
+  <div class="fixed top-4 right-4 z-40">
+    <button id="themeToggle" class="bg-blue-600 text-white p-2 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300">
+      <i class="fas fa-moon"></i>
+    </button>
+  </div>
+
+  <div class="container mx-auto px-4 py-8 max-w-6xl">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl px-6 py-8 mb-8 text-white shadow-lg animate-fade-in">
+      <h1 class="text-3xl font-bold mb-2 flex items-center">
+        <i class="fas fa-address-card mr-3"></i> VCF Generator Pro
+      </h1>
+      <p class="text-blue-100 max-w-2xl">
+        Konversi data kontak Anda dengan mudah ke format VCF yang siap diimpor ke ponsel atau aplikasi manajemen kontak Anda.
+      </p>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Main Content -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Input Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden animate-fade-in">
+          <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+            <div class="font-medium text-gray-700 dark:text-gray-200 flex items-center">
+              <i class="fas fa-file-import mr-2"></i> Input Data
+            </div>
+            <div id="contactCount" class="bg-blue-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
+              0 kontak
+            </div>
+          </div>
+          <div class="p-6">
+            <!-- Tabs -->
+            <div class="border-b border-gray-200 dark:border-gray-700">
+              <ul class="flex flex-wrap -mb-px">
+                <li class="mr-2">
+                  <button id="text-tab" class="inline-block py-3 px-4 text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 font-medium text-sm focus:outline-none">
+                    <i class="fas fa-keyboard mr-2"></i> Text Input
+                  </button>
+                </li>
+                <li class="mr-2">
+                  <button id="file-tab" class="inline-block py-3 px-4 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 font-medium text-sm focus:outline-none">
+                    <i class="fas fa-file-upload mr-2"></i> File Upload
+                  </button>
+                </li>
+              </ul>
+            </div>
+            
+            <!-- Tab Content -->
+            <div class="pt-4">
+              <!-- Text Input Tab -->
+              <div id="text-input" class="tab-content">
+                <div class="mb-4">
+                  <label for="txtInput" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Masukkan Data Kontak (format TXT yang mengandung TEL;TYPE=CELL:)
+                  </label>
+                  <textarea id="txtInput" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 p-3 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-40 font-mono transition-colors" placeholder="Paste isi kontak di sini...&#10;Contoh format:&#10;TEL;TYPE=CELL:+62812345678&#10;TEL;TYPE=CELL:+62898765432"></textarea>
+                </div>
+              </div>
+              
+              <!-- File Upload Tab -->
+              <div id="file-input" class="tab-content hidden">
+                <div id="dropArea" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  <i class="fas fa-cloud-upload-alt text-5xl text-blue-500 dark:text-blue-400 mb-4"></i>
+                  <h4 class="text-lg font-medium text-gray-700 dark:text-gray-200 mb-2">Drag & Drop File</h4>
+                  <p class="text-gray-500 dark:text-gray-400 mb-4">atau</p>
+                  <label for="fileInput" class="inline-flex items-center px-4 py-2 border border-blue-500 dark:border-blue-400 rounded-lg text-blue-500 dark:text-blue-400 font-medium hover:bg-blue-50 dark:hover:bg-gray-700 cursor-pointer transition-colors">
+                    <i class="fas fa-file-upload mr-2"></i> Pilih File
+                  </label>
+                  <input type="file" id="fileInput" class="hidden" accept=".txt,.vcf">
+                  <p class="mt-4 text-xs text-gray-500 dark:text-gray-400">Format yang didukung: TXT, VCF</p>
+                </div>
+                
+                <div id="fileInfo" class="hidden mt-4 bg-blue-50 dark:bg-blue-900 dark:bg-opacity-20 border border-blue-100 dark:border-blue-800 rounded-lg p-3 text-blue-800 dark:text-blue-200 flex items-center justify-between">
+                  <div class="flex items-center">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    <span id="fileName"></span>
+                  </div>
+                  <button id="removeFile" class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 focus:outline-none">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Format Settings Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden animate-fade-in" style="animation-delay: 0.2s">
+          <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+            <div class="font-medium text-gray-700 dark:text-gray-200 flex items-center">
+              <i class="fas fa-cog mr-2"></i> Pengaturan Format
+            </div>
+          </div>
+          <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label for="namaAwalan" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Nama Awalan
+                </label>
+                <div class="relative rounded-lg shadow-sm">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-tag text-gray-400"></i>
+                  </div>
+                  <input type="text" id="namaAwalan" class="block w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" placeholder="Contoh: grup2">
+                </div>
+              </div>
+              
+              <div>
+                <label for="prefix" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Prefix
+                </label>
+                <div class="relative rounded-lg shadow-sm">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-hashtag text-gray-400"></i>
+                  </div>
+                  <input type="text" id="prefix" class="block w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" placeholder="Contoh: lanzz">
+                </div>
+              </div>
+              
+              <div>
+                <label for="nomorAwal" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Nomor Awal
+                </label>
+                <div class="relative rounded-lg shadow-sm">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-sort-numeric-up text-gray-400"></i>
+                  </div>
+                  <input type="number" id="nomorAwal" class="block w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" placeholder="Contoh: 1600">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Sidebar -->
+      <div class="space-y-6">
+        <!-- Preview Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden animate-fade-in" style="animation-delay: 0.4s">
+          <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+            <div class="font-medium text-gray-700 dark:text-gray-200 flex items-center">
+              <i class="fas fa-eye mr-2"></i> Preview
+            </div>
+          </div>
+          <div class="p-6">
+            <div id="previewContainer" class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 h-64 overflow-y-auto custom-scrollbar">
+              <div class="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                <i class="fas fa-address-card text-5xl mb-4"></i>
+                <p>Preview kontak akan muncul di sini</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Action Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden animate-fade-in" style="animation-delay: 0.6s">
+          <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+            <div class="font-medium text-gray-700 dark:text-gray-200 flex items-center">
+              <i class="fas fa-download mr-2"></i> Generate & Download
+            </div>
+          </div>
+          <div class="p-6 space-y-3">
+            <button id="generateBtn" class="w-full flex items-center justify-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+              <i class="fas fa-file-export mr-2"></i> Generate VCF
+            </button>
+            <button id="resetBtn" class="w-full flex items-center justify-center px-6 py-3 border border-blue-500 dark:border-blue-400 text-blue-500 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700 font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+              <i class="fas fa-redo mr-2"></i> Reset Form
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="mt-12 text-center text-gray-500 dark:text-gray-400 text-sm">
+      <p>&copy; 2025 VCF Generator Pro | Versi 2.0</p>
+    </footer>
+  </div>
+  
+  <!-- Toast Container -->
+  <div id="toastContainer" class="fixed bottom-4 right-4 z-50 space-y-3"></div>
+  
+  <script>
+    $(document).ready(function() {
+      // DOM Elements
+      const $txtInput = $('#txtInput');
+      const $fileInput = $('#fileInput');
+      const $dropArea = $('#dropArea');
+      const $namaAwalan = $('#namaAwalan');
+      const $prefix = $('#prefix');
+      const $nomorAwal = $('#nomorAwal');
+      const $generateBtn = $('#generateBtn');
+      const $resetBtn = $('#resetBtn');
+      const $previewContainer = $('#previewContainer');
+      const $contactCount = $('#contactCount');
+      const $fileInfo = $('#fileInfo');
+      const $fileName = $('#fileName');
+      const $removeFile = $('#removeFile');
+      const $loadingOverlay = $('#loading-overlay');
+      const $themeToggle = $('#themeToggle');
+      const $toastContainer = $('#toastContainer');
+      
+      // Tab elements
+      const $textTab = $('#text-tab');
+      const $fileTab = $('#file-tab');
+      const $textInput = $('#text-input');
+      const $fileInputTab = $('#file-input');
+      
+      // Theme Toggle
+      $themeToggle.on('click', function() {
+        $('html').toggleClass('dark');
+        $('body').toggleClass('dark:bg-gray-900');
+        
+        const $icon = $(this).find('i');
+        if ($('html').hasClass('dark')) {
+          $icon.removeClass('fa-moon').addClass('fa-sun');
+        } else {
+          $icon.removeClass('fa-sun').addClass('fa-moon');
+        }
+      });
+      
+      // Tab Switching
+      $textTab.on('click', function() {
+        // Update tab buttons
+        $textTab.addClass('text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400')
+               .removeClass('text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300');
+        
+        $fileTab.removeClass('text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400')
+               .addClass('text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300');
+        
+        // Show/hide content
+        $textInput.removeClass('hidden');
+        $fileInputTab.addClass('hidden');
+      });
+      
+      $fileTab.on('click', function() {
+        // Update tab buttons
+        $fileTab.addClass('text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400')
+               .removeClass('text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300');
+        
+        $textTab.removeClass('text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400')
+               .addClass('text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300');
+        
+        // Show/hide content
+        $fileInputTab.removeClass('hidden');
+        $textInput.addClass('hidden');
+      });
+      
+      // Drag and Drop Events
+      $dropArea[0].addEventListener('dragenter', preventDefault);
+      $dropArea[0].addEventListener('dragover', preventDefault);
+      $dropArea[0].addEventListener('dragleave', preventDefault);
+      $dropArea[0].addEventListener('drop', preventDefault);
+      
+      function preventDefault(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      
+      $dropArea[0].addEventListener('dragenter', highlight);
+      $dropArea[0].addEventListener('dragover', highlight);
+      $dropArea[0].addEventListener('dragleave', unhighlight);
+      $dropArea[0].addEventListener('drop', unhighlight);
+      
+      function highlight() {
+        $dropArea.addClass('bg-blue-50 dark:bg-blue-900 dark:bg-opacity-20 border-blue-300 dark:border-blue-700');
+      }
+      
+      function unhighlight() {
+        $dropArea.removeClass('bg-blue-50 dark:bg-blue-900 dark:bg-opacity-20 border-blue-300 dark:border-blue-700');
+      }
+      
+      $dropArea[0].addEventListener('drop', function(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        if (files.length) {
+          handleFiles(files);
+        }
+      });
+      
+      $fileInput.on('change', function() {
+        if (this.files.length) {
+          handleFiles(this.files);
+        }
+      });
+      
+      function handleFiles(files) {
+        const file = files[0];
+        if (file) {
+          $fileName.text(`${file.name} (${formatFileSize(file.size)})`);
+          $fileInfo.removeClass('hidden');
+          
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const content = e.target.result;
+            
+            // Check if it's a VCF file
+            if (file.name.toLowerCase().endsWith('.vcf')) {
+              parseVcfFile(content);
+            } else {
+              // Assume it's a text file
+              $txtInput.val(content);
+              updatePreview();
+            }
+          };
+          reader.readAsText(file);
+        }
+      }
+      
+      function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' bytes';
+        else if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        else return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+      }
+      
+      function parseVcfFile(content) {
+        // Extract phone numbers from VCF file
+        const phoneRegex = /TEL;TYPE=CELL:([^\r\n]+)/g;
+        let match;
+        let phones = [];
+        
+        while ((match = phoneRegex.exec(content)) !== null) {
+          phones.push(match[1]);
+        }
+        
+        if (phones.length > 0) {
+          let result = phones.map(phone => `TEL;TYPE=CELL:${phone}`).join('\n');
+          $txtInput.val(result);
+          updatePreview();
+          showToast('success', 'File VCF berhasil dibaca', `${phones.length} nomor telepon ditemukan`);
+        } else {
+          showToast('error', 'Format tidak valid', 'Tidak ditemukan nomor telepon dalam format yang benar');
+        }
+      }
+      
+      // File info handling
+      $removeFile.on('click', function() {
+        $fileInput.val('');
+        $fileInfo.addClass('hidden');
+      });
+      
+      // Input events
+      $txtInput.on('input', updatePreview);
+      $namaAwalan.on('input', updatePreview);
+      $prefix.on('input', updatePreview);
+      $nomorAwal.on('input', updatePreview);
+      
+      // Update preview when input changes
+      function updatePreview() {
+        const inputText = $txtInput.val().trim();
+        
+        if (!inputText) {
+          $previewContainer.html(`
+            <div class="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
+              <i class="fas fa-address-card text-5xl mb-4"></i>
+              <p>Preview kontak akan muncul di sini</p>
+            </div>
+          `);
+          $contactCount.text('0 kontak');
+          return;
+        }
+        
+        // Extract phone numbers
+        const phoneLines = inputText.split('\n').filter(line => line.trim().startsWith('TEL;TYPE=CELL:'));
+        const phoneNumbers = phoneLines.map(line => line.replace('TEL;TYPE=CELL:', '').trim());
+        
+        // Update contact count
+        $contactCount.text(`${phoneNumbers.length} kontak`);
+        
+        if (phoneNumbers.length === 0) {
+          $previewContainer.html(`
+            <div class="flex flex-col items-center justify-center h-full text-yellow-500">
+              <i class="fas fa-exclamation-triangle text-5xl mb-4"></i>
+              <p>Tidak ditemukan format nomor yang valid</p>
+            </div>
+          `);
+          return;
+        }
+        
+        // Generate preview for first 5 contacts
+        const namaAwalanValue = $namaAwalan.val().trim();
+        const prefixValue = $prefix.val().trim();
+        const nomorAwalValue = parseInt($nomorAwal.val()) || 1;
+        
+        let previewHtml = '';
+        
+        for (let i = 0; i < Math.min(5, phoneNumbers.length); i++) {
+          const contactNumber = nomorAwalValue + i;
+          const contactName = namaAwalanValue + (prefixValue ? ` ${prefixValue}` : '') + (namaAwalanValue || prefixValue ? ' ' : '') + contactNumber;
+          const phoneNumber = phoneNumbers[i];
+          
+          previewHtml += `
+            <div class="bg-white dark:bg-gray-800 p-3 rounded-md mb-2 border border-gray-200 dark:border-gray-700 shadow-sm">
+              <div class="font-medium text-gray-800 dark:text-gray-200">${contactName}</div>
+              <div class="text-sm text-gray-600 dark:text-gray-400">${phoneNumber}</div>
+            </div>
+          `;
+        }
+        
+        if (phoneNumbers.length > 5) {
+          previewHtml += `
+            <div class="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">
+              +${phoneNumbers.length - 5} kontak lainnya
+            </div>
+          `;
+        }
+        
+        $previewContainer.html(previewHtml);
+      }
+      
+      // Generate VCF file
+      $generateBtn.on('click', function() {
+        const inputText = $txtInput.val().trim();
+        
+        if (!inputText) {
+          showToast('error', 'Tidak ada data', 'Silakan masukkan data kontak terlebih dahulu');
+          return;
+        }
+        
+        // Extract phone numbers
+        const phoneLines = inputText.split('\n').filter(line => line.trim().startsWith('TEL;TYPE=CELL:'));
+        const phoneNumbers = phoneLines.map(line => line.replace('TEL;TYPE=CELL:', '').trim());
+        
+        if (phoneNumbers.length === 0) {
+          showToast('error', 'Format tidak valid', 'Tidak ditemukan nomor telepon dalam format yang benar');
+          return;
+        }
+        
+        // Show loading overlay
+        $loadingOverlay.css({
+          opacity: 1,
+          pointerEvents: 'auto'
+        });
+        
+        setTimeout(function() {
+          // Generate VCF content
+          const namaAwalanValue = $namaAwalan.val().trim();
+          const prefixValue = $prefix.val().trim();
+          const nomorAwalValue = parseInt($nomorAwal.val()) || 1;
+          
+          let vcfContent = '';
+          
+          phoneNumbers.forEach((phone, index) => {
+            const contactNumber = nomorAwalValue + index;
+            const contactName = namaAwalanValue + (prefixValue ? ` ${prefixValue}` : '') + (namaAwalanValue || prefixValue ? ' ' : '') + contactNumber;
+            
+            vcfContent += 'BEGIN:VCARD\n';
+            vcfContent += 'VERSION:3.0\n';
+            vcfContent += `N:${contactName};;;\n`;
+            vcfContent += `FN:${contactName}\n`;
+            vcfContent += `TEL;TYPE=CELL:${phone}\n`;
+            vcfContent += 'END:VCARD\n';
+          });
+          
+          // Create download link
+          const blob = new Blob([vcfContent], { type: 'text/vcard' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          a.download = 'contacts.vcf';
+          document.body.appendChild(a);
+          a.click();
+          
+          // Clean up
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+          
+          // Hide loading overlay
+          $loadingOverlay.css({
+            opacity: 0,
+            pointerEvents: 'none'
+          });
+          
+          showToast('success', 'Generate Berhasil', `${phoneNumbers.length} kontak telah digenerate dan siap didownload`);
+        }, 800); // Simulate processing time
+      });
+      
+      // Reset form
+      $resetBtn.on('click', function() {
+        $txtInput.val('');
+        $namaAwalan.val('');
+        $prefix.val('');
+        $nomorAwal.val('');
+        $fileInput.val('');
+        $fileInfo.addClass('hidden');
+        
+        updatePreview();
+        
+        showToast('info', 'Form Direset', 'Semua data input telah dihapus');
+      });
+      
+      // Show toast notification
+      function showToast(type, title, message) {
+        const iconMap = {
+          success: 'fa-check-circle',
+          error: 'fa-exclamation-circle',
+          info: 'fa-info-circle',
+          warning: 'fa-exclamation-triangle'
+        };
+        
+        const colorMap = {
+          success: 'bg-green-500',
+          error: 'bg-red-500',
+          info: 'bg-blue-500',
+          warning: 'bg-yellow-500'
+        };
+        
+        const icon = iconMap[type] || 'fa-info-circle';
+        const color = colorMap[type] || 'bg-blue-500';
+        
+        const toast = $(`
+          <div class="transform transition-all duration-300 bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden mb-4 flex border-l-4 ${color}-border">
+            <div class="flex items-center justify-center ${color} px-4">
+              <i class="fas ${icon} text-white"></i>
+            </div>
+            <div class="px-4 py-3 flex-1">
+              <div class="font-medium text-gray-900 dark:text-gray-100">${title}</div>
+              <div class="text-sm text-gray-600 dark:text-gray-300">${message}</div>
+            </div>
+            <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-3 focus:outline-none toast-close">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        `);
+        
+        $toastContainer.append(toast);
+        
+        // Auto remove toast after 5 seconds
+        setTimeout(function() {
+          toast.css('opacity', '0');
+          setTimeout(function() {
+            toast.remove();
+          }, 300);
+        }, 5000);
+        
+        // Close toast on click
+        toast.find('.toast-close').on('click', function() {
+          toast.css('opacity', '0');
+          setTimeout(function() {
+            toast.remove();
+          }, 300);
+        });
+      }
+      
+      // Initialize with a default preview
+      updatePreview();
+      
+      // Helper function to extract phone numbers from text
+      function extractPhoneNumbers(text) {
+        const phoneRegex = /TEL;TYPE=CELL:([^\r\n]+)/g;
+        let match;
+        let phones = [];
+        
+        while ((match = phoneRegex.exec(text)) !== null) {
+          phones.push(match[1]);
+        }
+        
+        return phones;
+      }
+      
+      // For mobile: Make sure dropArea is responsive on mobile
+      $dropArea.on('touchstart', function(e) {
+        e.preventDefault();
+        $fileInput.trigger('click');
+      });
+      
+      // Add a quick sample button for demo purposes
+      const $sampleBtn = $(`
+        <button class="text-xs text-blue-500 dark:text-blue-400 hover:underline mt-2 focus:outline-none">
+          <i class="fas fa-magic mr-1"></i> Masukkan Sample Data
+        </button>
+      `);
+      
+      $txtInput.after($sampleBtn);
+      
+      $sampleBtn.on('click', function() {
+        $txtInput.val(`TEL;TYPE=CELL:+6281234567890
+TEL;TYPE=CELL:+6281234567891
+TEL;TYPE=CELL:+6281234567892
+TEL;TYPE=CELL:+6281234567893
+TEL;TYPE=CELL:+6281234567894
+TEL;TYPE=CELL:+6281234567895
+TEL;TYPE=CELL:+6281234567896
+TEL;TYPE=CELL:+6281234567897`);
+        $namaAwalan.val('Grup Wa');
+        $prefix.val('VIP');
+        $nomorAwal.val('1');
+        updatePreview();
+      });
+      
+      // Handle dark mode preference from system
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        $('html').addClass('dark');
+        $('body').addClass('dark:bg-gray-900');
+        $themeToggle.find('i').removeClass('fa-moon').addClass('fa-sun');
+      }
+    });
+  </script>
+</body>
+</html>
